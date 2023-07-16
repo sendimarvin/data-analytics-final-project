@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+    <head>
+
+    </head>
+    <body>
+
+        <div id="table-container"></div>
+        
+        <script src="https://d3js.org/d3.v6.min.js"></script>
+        <script>
+            window.addEventListener("load", function() {
+                // Entire page has loaded, do your actions here
+                console.log("Page has loaded completely.");
+                d3.select("body").append("p").text("Hello World!");
+
+
+                d3.csv("output.csv").then(function(data) {
+                    // Data loading is complete, perform operations on the data
+                    console.log(data);
+
+                    displayTable(data);
+
+                    }).catch(function(error) {
+                    // Error occurred while loading the data
+                    console.log(error);
+                });
+
+            });
+
+
+            function displayTable (data) {
+
+//                 var data = [
+//   { name: "John", age: 25, city: "New York" },
+//   { name: "Alice", age: 32, city: "San Francisco" },
+//   { name: "Bob", age: 41, city: "Chicago" }
+// ];
+
+                var tableContainer = d3.select("#table-container");
+                var table = tableContainer.append("table");
+                var thead = table.append("thead");
+                var tbody = table.append("tbody");
+
+                // Create table headers
+                var headers = Object.keys(data[0]);
+                thead.append("tr")
+                .selectAll("th")
+                .data(headers)
+                .enter()
+                .append("th")
+                .text(function(d) { return d; });
+
+                // Create table rows
+                var rows = tbody.selectAll("tr")
+                .data(data)
+                .enter()
+                .append("tr");
+
+                // Create cells for each row
+                rows.selectAll("td")
+                .data(function(d) { return Object.values(d); })
+                .enter()
+                .append("td")
+                .text(function(d) { return d; });
+
+            }
+        </script>
+    </body>
+</html>
