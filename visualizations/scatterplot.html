@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>D3 Scatter Plot</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+      /* Add some basic styling */
+      .dot {
+        fill: steelblue;
+      }
+    </style>
+  </head>
+  <body>
+    <h3>Scatter Plot to show relationshit between Alkterlinity and PH Per Water Source</h3>
+    <svg id="chart"></svg>
+
+    <script>
+    
+    d3.csv("output2.csv").then(function(data) {
+        data = fixDataTypes(data) 
+        // Data loading is complete, perform operations on the data
+        console.log(data);
+
+        drawScatterplot(data);
+
+        }).catch(function(error) {
+        // Error occurred while loading the data
+        console.log(error);
+    });
+
+    function fixDataTypes (data) {
+                var mData = []
+                data.forEach(item => {
+                    item['Ammonium-N'] =  isNaN(item['Ammonium-N']) ? 0 :  +item['Ammonium-N']
+                    item['pH'] =  isNaN(item['pH']) ? 0 :  +item['pH']
+                    item['Turbidity'] =  isNaN(item['Turbidity']) ? 0 :  +item['Turbidity']
+                    item['Color (Apparent)'] =  isNaN(item['Color (Apparent)']) ? 0 :  +item['Color (Apparent)']
+                    item['Total Alkalinity'] =  isNaN(item['Total Alkalinity']) ? 0 :  +item['Total Alkalinity']
+                    item['Total hardness'] =  isNaN(item['Total hardness']) ? 0 :  +item['Total hardness']
+                    item['Electrical Conductivity'] =  isNaN(item['Electrical Conductivity']) ? 0 :  +item['Electrical Conductivity']
+                    mData.push(item)
+                });
+                return mData
+            }
+
+
+      function drawScatterplot (data){
+
+      // Set the dimensions of the chart
+      const margin = { top: 20, right: 20, bottom: 30, left: 40 };
+      const width = 1200 - margin.left - margin.right;
+      const height = 700 - margin.top - margin.bottom;
+
+      // Create the SVG container
+      const svg = d3
+        .select("#chart")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+      // Set the x and y scales
+      const x = d3
+        .scaleLinear()
+        .range([0, width])
+        .domain(d3.extent(data, (d) => d['pH']));
+
+      const y = d3
+        .scaleLinear()
+        .range([height, 0])
+        .domain(d3.extent(data, (d) => d['Total Alkalinity']));
+
+      // Create the dots
+      svg
+        .selectAll(".dot")
+        .data(data)
+        .enter()
+        .append("circle")
+        .attr("class", "dot")
+        .attr("cx", (d) => x(d['pH']))
+        .attr("cy", (d) => y(d['Total Alkalinity']))
+        .attr("r", 5);
+
+      // Add x-axis
+      svg
+        .append("g")
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(x));
+
+      // Add y-axis
+      svg.append("g").call(d3.axisLeft(y));
+      }
+    </script>
+  </body>
+</html>

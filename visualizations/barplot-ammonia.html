@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            /* Add some basic styling */
+            .bar {
+              fill: steelblue;
+            }
+        </style>
+    </head>
+    <body>
+        <h3>Top Ammonium-N Presence Per Water Source</h3>
+        <!-- Create a div where the graph will take place -->
+        <svg id="chart"></svg>
+
+
+        <br>
+        <h3>Top Electrical Conductivity Per Water Source</h3>
+        <!-- Create a div where the graph will take place -->
+        <svg id="chart2"></svg>
+
+
+        <br>
+        <h3>Top PH Per Water Source</h3>
+        <!-- Create a div where the graph will take place -->
+        <svg id="chart3"></svg>
+
+        <br>
+        <h3>Lowest PH Per Water Source</h3>
+        <!-- Create a div where the graph will take place -->
+        <svg id="chart4"></svg>
+
+        <script src="https://d3js.org/d3.v6.min.js"></script>
+        <script>
+            window.addEventListener("load", function() {
+                // Entire page has loaded, do your actions here
+                console.log("Page has loaded completely.");
+                // d3.select("body").append("p").text("Hello World!");
+
+
+                d3.csv("output2.csv").then(function(data) {
+                    data = fixDataTypes(data) 
+                    // Data loading is complete, perform operations on the data
+                    console.log(data);
+
+                    displayTable(data);
+                    displayTable2(data);
+                    displayTable3(data);
+                    displayTable4(data);
+
+                    }).catch(function(error) {
+                    // Error occurred while loading the data
+                    console.log(error);
+                });
+
+            });
+
+
+            function fixDataTypes (data) {
+                var mData = []
+                data.forEach(item => {
+                    item['Ammonium-N'] =  isNaN(item['Ammonium-N']) ? 0 :  +item['Ammonium-N']
+                    item['pH'] =  isNaN(item['pH']) ? 0 :  +item['pH']
+                    item['Turbidity'] =  isNaN(item['Turbidity']) ? 0 :  +item['Turbidity']
+                    item['Color (Apparent)'] =  isNaN(item['Color (Apparent)']) ? 0 :  +item['Color (Apparent)']
+                    item['Total Alkalinity'] =  isNaN(item['Total Alkalinity']) ? 0 :  +item['Total Alkalinity']
+                    item['Total hardness'] =  isNaN(item['Total hardness']) ? 0 :  +item['Total hardness']
+                    item['Electrical Conductivity'] =  isNaN(item['Electrical Conductivity']) ? 0 :  +item['Electrical Conductivity']
+                    mData.push(item)
+                });
+                return mData
+            }
+
+
+            function orderByColumnsDescending(data, column, topN=10) {
+                data.sort((a, b) => {
+                    const columnA = a[column];
+                    const columnB = b[column];
+
+                    if (columnA < columnB) {
+                    return 1;
+                    } else if (columnA > columnB) {
+                    return -1;
+                    } else {
+                    return 0;
+                    }
+                });
+
+                return data.slice(0, topN); // Return only the top N records
+            }
+
+            function orderByColumnsAscending(data, column, topN = 10) {
+                data.sort((a, b) => {
+                    const columnA = a[column];
+                    const columnB = b[column];
+
+                    if (columnA < columnB) {
+                    return -1; // Return a negative value to place a before b
+                    } else if (columnA > columnB) {
+                    return 1; // Return a positive value to place b before a
+                    } else {
+                    return 0;
+                    }
+                });
+
+                return data.slice(0, topN); // Return only the top N records
+            }
+
+
+            function displayTable(data) {
+                data = orderByColumnsDescending(data, column = "Ammonium-N", topN = 8);
+
+                // Set the dimensions of the chart
+                const margin = { top: 20, right: 20, bottom: 60, left: 60 };
+                const width = 1800 - margin.left - margin.right;
+                const height = 500 - margin.top - margin.bottom;
+
+                // Create the SVG container
+                const svg = d3
+                    .select("#chart")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                    .append("g")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+                // Set the x and y scales
+                const x = d3
+                    .scaleBand()
+                    .range([0, width])
+                    .padding(0.1)
+                    .domain(data.map((d) => d["Source Name"]));
+
+                const y = d3
+                    .scaleLinear()
+                    .range([height, 0])
+                    .domain([0, d3.max(data, (d) => d["Ammonium-N"])]);
+
+                // Create the bars
+                svg
+                    .selectAll(".bar")
+                    .data(data)
+                    .enter()
+                    .append("rect")
+                    .attr("class", "bar")
+                    .attr("x", (d) => x(d["Source Name"]))
+                    .attr("width", x.bandwidth())
+                    .attr("y", (d) => y(d["Ammonium-N"]))
+                    .attr("height", (d) => height - y(d["Ammonium-N"]));
+
+                // Add x-axis label
+                svg
+                    .append("text")
+                    .attr("class", "axis-label")
+                    .attr("x", width / 2)
+                    .attr("y", height + margin.bottom - 10)
+                    .style("text-anchor", "middle")
+                    .text("Source Name");
+
+                // Add y-axis label
+                svg
+                    .append("text")
+                    .attr("class", "axis-label")
+                    .attr("transform", "rotate(-90)")
+                    .attr("x", -(height / 2))
+                    .attr("y", -margin.left + 20)
+                    .style("text-anchor", "middle")
+                    .text("Ammonium-N");
+
+                // Add x-axis
+                svg.append("g").attr("transform", "translate(0," + height + ")").call(d3.axisBottom(x));
+
+                // Add y-axis
+                svg.append("g").call(d3.axisLeft(y));
+            }
+
+
+            function displayTable2(data) {
+                data = orderByColumnsDescending(data, column = "Electrical Conductivity", topN = 8);
+
+                // Set the dimensions of the chart
+                const margin = { top: 20, right: 20, bottom: 60, left: 60 };
+                const width = 1800 - margin.left - margin.right;
+                const height = 500 - margin.top - margin.bottom;
+
+                // Create the SVG container
+                const svg = d3
+                    .select("#chart2")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                    .append("g")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+                // Set the x and y scales
+                const x = d3
+                    .scaleBand()
+                    .range([0, width])
+                    .padding(0.1)
+                    .domain(data.map((d) => d["Source Name"]));
+
+                const y = d3
+                    .scaleLinear()
+                    .range([height, 0])
+                    .domain([0, d3.max(data, (d) => d["Electrical Conductivity"])]);
+
+                // Create the bars
+                svg
+                    .selectAll(".bar")
+                    .data(data)
+                    .enter()
+                    .append("rect")
+                    .attr("class", "bar")
+                    .attr("x", (d) => x(d["Source Name"]))
+                    .attr("width", x.bandwidth())
+                    .attr("y", (d) => y(d["Electrical Conductivity"]))
+                    .attr("height", (d) => height - y(d["Electrical Conductivity"]));
+
+                // Add x-axis label
+                svg
+                    .append("text")
+                    .attr("class", "axis-label")
+                    .attr("x", width / 2)
+                    .attr("y", height + margin.bottom - 10)
+                    .style("text-anchor", "middle")
+                    .text("Source Name");
+
+                // Add y-axis label
+                svg
+                    .append("text")
+                    .attr("class", "axis-label")
+                    .attr("transform", "rotate(-90)")
+                    .attr("x", -(height / 2))
+                    .attr("y", -margin.left + 20)
+                    .style("text-anchor", "middle")
+                    .text("Electrical Conductivity");
+
+                // Add x-axis
+                svg.append("g").attr("transform", "translate(0," + height + ")").call(d3.axisBottom(x));
+
+                // Add y-axis
+                svg.append("g").call(d3.axisLeft(y));
+            } 
+            
+            function displayTable3(data) {
+                data = orderByColumnsDescending(data, column = "pH", topN = 8);
+
+                // Set the dimensions of the chart
+                const margin = { top: 20, right: 20, bottom: 60, left: 60 };
+                const width = 1800 - margin.left - margin.right;
+                const height = 500 - margin.top - margin.bottom;
+
+                // Create the SVG container
+                const svg = d3
+                    .select("#chart3")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                    .append("g")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+                // Set the x and y scales
+                const x = d3
+                    .scaleBand()
+                    .range([0, width])
+                    .padding(0.1)
+                    .domain(data.map((d) => d["Source Name"]));
+
+                const y = d3
+                    .scaleLinear()
+                    .range([height, 0])
+                    .domain([0, d3.max(data, (d) => d["pH"])]);
+
+                // Create the bars
+                svg
+                    .selectAll(".bar")
+                    .data(data)
+                    .enter()
+                    .append("rect")
+                    .attr("class", "bar")
+                    .attr("x", (d) => x(d["Source Name"]))
+                    .attr("width", x.bandwidth())
+                    .attr("y", (d) => y(d["pH"]))
+                    .attr("height", (d) => height - y(d["pH"]));
+
+                // Add x-axis label
+                svg
+                    .append("text")
+                    .attr("class", "axis-label")
+                    .attr("x", width / 2)
+                    .attr("y", height + margin.bottom - 10)
+                    .style("text-anchor", "middle")
+                    .text("Source Name");
+
+                // Add y-axis label
+                svg
+                    .append("text")
+                    .attr("class", "axis-label")
+                    .attr("transform", "rotate(-90)")
+                    .attr("x", -(height / 2))
+                    .attr("y", -margin.left + 20)
+                    .style("text-anchor", "middle")
+                    .text("pH");
+
+                // Add x-axis
+                svg.append("g").attr("transform", "translate(0," + height + ")").call(d3.axisBottom(x));
+
+                // Add y-axis
+                svg.append("g").call(d3.axisLeft(y));
+            }
+
+
+            function displayTable4(data) {
+                let nData = [];
+                data.forEach((item) => {
+                    if (item['pH'] > 0)
+                    nData.push(item);
+                });
+
+                data = orderByColumnsAscending(nData, column = "pH", topN = 8);
+
+                // Set the dimensions of the chart
+                const margin = { top: 20, right: 20, bottom: 60, left: 60 };
+                const width = 2000 - margin.left - margin.right;
+                const height = 700 - margin.top - margin.bottom;
+
+                // Create the SVG container
+                const svg = d3
+                    .select("#chart4")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                    .append("g")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+                // Set the x and y scales
+                const x = d3
+                    .scaleBand()
+                    .range([0, width])
+                    .padding(0.1)
+                    .domain(data.map((d) => d["Source Name"]));
+
+                const y = d3
+                    .scaleLinear()
+                    .range([height, 0])
+                    .domain([0, d3.max(data, (d) => d["pH"])]);
+
+                // Create the bars
+                svg
+                    .selectAll(".bar")
+                    .data(data)
+                    .enter()
+                    .append("rect")
+                    .attr("class", "bar")
+                    .attr("x", (d) => x(d["Source Name"]))
+                    .attr("width", x.bandwidth())
+                    .attr("y", (d) => y(d["pH"]))
+                    .attr("height", (d) => height - y(d["pH"]));
+
+                // Add x-axis label
+                svg
+                    .append("text")
+                    .attr("class", "axis-label")
+                    .attr("x", width / 2)
+                    .attr("y", height + margin.bottom - 10)
+                    .style("text-anchor", "middle")
+                    .text("Source Name");
+
+                // Add y-axis label
+                svg
+                    .append("text")
+                    .attr("class", "axis-label")
+                    .attr("transform", "rotate(-90)")
+                    .attr("x", -(height / 2))
+                    .attr("y", -margin.left + 20)
+                    .style("text-anchor", "middle")
+                    .text("pH");
+
+                // Add x-axis
+                svg.append("g").attr("transform", "translate(0," + height + ")").call(d3.axisBottom(x));
+
+                // Add y-axis
+                svg.append("g").call(d3.axisLeft(y));
+            }
+
+        
+        </script>
+    </body>
+</html>
