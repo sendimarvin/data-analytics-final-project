@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sunburst Chart</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    .slice path {
+      stroke: #fff;
+    }
+  </style>
+</head>
+<body>
+  <svg id="chart" width="800" height="600"></svg>
+
+  <script>
+    // Sample data
+    const data = [
+      { County: "County A", "Sub county": "Sub County A", value: 10 },
+      { County: "County A", "Sub county": "Sub County B", value: 15 },
+      { County: "County B", "Sub county": "Sub County C", value: 20 },
+      // Add more data points...
+    ];
+
+    // Set the dimensions and radius of the chart
+    const width = 800;
+    const height = 600;
+    const radius = Math.min(width, height) / 2;
+
+    // Create the SVG container
+    const svg = d3.select("#chart")
+      .attr("width", width)
+      .attr("height", height)
+      .append("g")
+      .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+    // Set the color scale
+    const color = d3.scaleOrdinal(d3.schemeCategory10);
+
+    // Create the partition layout
+    const partition = d3.partition()
+      .size([2 * Math.PI, radius]);
+
+    // Set the root node for the hierarchy
+    const root = d3.hierarchy({ children: data })
+      .sum((d) => d.value);
+
+    // Create the sunburst data structure
+    const nodes = partition(root)
+      .descendants();
+
+    // Generate the arcs
+    const arc = d3.arc()
+      .startAngle((d) => d.x0)
+      .endAngle((d) => d.x1)
+      .innerRadius((d) => d.y0)
+      .outerRadius((d) => d.y1);
+
+    // Append the arcs
+    svg.selectAll("path")
+      .data(nodes)
+      .enter()
+      .append("path")
+      .attr("class", "slice")
+      .attr("d", arc)
+      .style("fill", (d) => color((d.children ? d : d.parent).data.County));
+
+    // Add labels
+    svg.selectAll("text")
+      .data(nodes)
+      .enter()
+      .append("text")
+      .attr("transform", (d) => `translate(${arc.centroid(d)})`)
+      .attr("dy", "0.35em")
+      .text((d) => d.data["Sub county"])
+      .style("text-anchor", "middle")
+      .style("font-size", "12px");
+
+  </script>
+</body>
+</html>

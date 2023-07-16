@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Pie Chart with D3.js</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    .slice {
+      fill-opacity: 0.7;
+    }
+    .slice:hover {
+      fill-opacity: 1;
+    }
+  </style>
+</head>
+<body>
+    <br><br><br>
+    <select id="dropdown">
+        <option value="Ammonium-N">Ammonium-N</option>
+        <option value="pH">pH</option>
+        <option value="Turbidity">Turbidity</option>
+        <option value="Color (Apparent)">Color (Apparent)</option>
+        <option value="Total Alkalinity">Total Alkalinity</option>
+        <option value="Total hardness">Total hardness</option>
+        <option value="Electrical Conductivity">Electrical Conductivity</option>
+        <option value="Total Dissolved Solids">Total Dissolved Solids</option>
+        <option value="Chloride">Chloride</option>
+        <option value="Phosphates-P">Phosphates-P</option>
+        <option value="Nitrates">Nitrates</option>
+        <option value="Sodium">Sodium</option>
+        <option value="Potassium">Potassium</option>
+      </select>
+      <br><br><br>
+      <h2>Piechart to view <span id="header-value">PH</span> per Districts</h2>
+  <svg id="chart" width="600" height="600"></svg>
+
+    <script>
+
+    excelData = []
+
+        const dropdown = document.getElementById('dropdown');
+
+        dropdown.addEventListener('change', function() {
+            const selectedValue = dropdown.value;
+            console.log(selectedValue); // Perform your desired actions based on the selected value
+
+            document.getElementById('header-value').innerHTML = selectedValue
+
+            const svg = d3.select("#chart");
+            svg.html("");
+
+
+            drawPie (excelData, selectedValue) 
+        });
+    
+    d3.csv("output2.csv").then(function(data) {
+        data = fixDataTypes(data) 
+        // Data loading is complete, perform operations on the data
+        console.log(data);
+
+        drawPie(data, "pH");
+
+        }).catch(function(error) {
+        // Error occurred while loading the data
+        console.log(error);
+    });
+
+    function fixDataTypes (data) {
+        var mData = []
+        data.forEach(item => {
+            item['Ammonium-N'] =  isNaN(+item['Ammonium-N']) ? 0 :  +item['Ammonium-N']
+            item['pH'] =  isNaN(+item['pH']) ? 0 :  +item['pH']
+            item['Turbidity'] =  isNaN(+item['Turbidity']) ? 0 :  +item['Turbidity']
+            item['Color (Apparent)'] =  isNaN(+item['Color (Apparent)']) ? 0 :  +item['Color (Apparent)']
+            item['Total Alkalinity'] =  isNaN(+item['Total Alkalinity']) ? 0 :  +item['Total Alkalinity']
+            item['Total hardness'] =  isNaN(+item['Total hardness']) ? 0 :  +item['Total hardness']
+            item['Electrical Conductivity'] =  isNaN(+item['Electrical Conductivity']) ? 0 :  +item['Electrical Conductivity']
+            item['Total Dissolved Solids'] =  isNaN(+item['Total Dissolved Solids']) ? 0 :  +item['Total Dissolved Solids']
+            item['Chloride'] =  isNaN(+item['Chloride']) ? 0 :  +item['Chloride']
+            item['Phosphates-P'] =  isNaN(+item['Phosphates-P']) ? 0 :  +item['Phosphates-P']
+            item['Nitrates'] =  isNaN(+item['Nitrates']) ? 0 :  +item['Nitrates']
+            item['Sodium'] =  isNaN(+item['Sodium']) ? 0 :  +item['Sodium']
+            item['Potassium'] =  isNaN(+item['Potassium']) ? 0 :  +item['Potassium']
+            mData.push(item)
+        });
+        return mData
+    }
+
+
+    function groupByAndAverage(arr, grouypByField, grouypByValue) {
+        const groups = {};
+        
+        arr.forEach(obj => {
+            const groupValue = obj[grouypByField];
+            
+            if (!groups[groupValue]) {
+            groups[groupValue] = {
+                count: 0,
+                sum: 0,
+                average: 0
+            };
+            }
+            
+            groups[groupValue].count++;
+            groups[groupValue].sum += obj[grouypByValue];
+        });
+        
+        Object.keys(groups).forEach(groupValue => {
+            const group = groups[groupValue];
+            group.average = group.sum / group.count;
+        });
+        
+        return groups;
+    }
+
+    function drawPie(data, selectedValue) {
+        excelData = data;
+        console.log({"data: ": data})
+        data = data.filter((item) => item[selectedValue] > 0);
+        data = groupByAndAverage(data, "District", selectedValue)
+
+        console.log({"groupByAndAverage: ": data})
+        // Set up the SVG container
+
+        mData = []
+        const keys = Object.keys(data);
+        for (let i = 0; i < keys.length; i++) {
+            mData.push({label:  keys[i], value: data[keys[i]].average})
+        }
+
+        console.log(mData)
+        data=mData
+        // Set up the SVG container
+        const svg = d3.select("#chart");
+        const width = svg.attr("width");
+        const height = svg.attr("height");
+        const radius = Math.min(width, height) / 2;
+        const color = d3.scaleOrdinal(d3.schemeCategory10);
+
+        // Create a pie layout
+        const pie = d3.pie()
+        .value(d => d.value)
+        .sort(null);
+
+        // Generate the arc shapes
+        const arc = d3.arc()
+        .innerRadius(0)
+        .outerRadius(radius);
+
+        // Create the pie chart
+        const chart = svg.append("g")
+        .attr("transform", `translate(${width / 2}, ${height / 2})`);
+
+        // Bind the data to the chart
+        const arcs = chart.selectAll(".arc")
+        .data(pie(data))
+        .enter()
+        .append("g")
+        .attr("class", "arc");
+
+        // Draw the slices
+        arcs.append("path")
+        .attr("d", arc)
+        .attr("fill", (d, i) => color(i))
+        .attr("class", "slice");
+
+        // Add labels to the slices
+        arcs.append("text")
+        .attr("transform", d => `translate(${arc.centroid(d)})`)
+        .attr("text-anchor", "middle")
+        .text(d => d.data.label);
+    }
+
+    </script>
+  </body>
+</html>

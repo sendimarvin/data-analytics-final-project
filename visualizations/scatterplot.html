@@ -11,8 +11,13 @@
     </style>
   </head>
   <body>
-    <h3>Scatter Plot to show relationshit between Alkterlinity and PH Per Water Source</h3>
+    <h3>Scatter Plot to show relationship between Alkterlinity and PH Per Water Source</h3>
     <svg id="chart"></svg>
+    <br>
+
+    <h3>Scatter Plot to show relationship between Electrical Conductivity and PH Per Water Source</h3>
+    <svg id="chart2"></svg>
+    <br>
 
     <script>
     
@@ -22,6 +27,7 @@
         console.log(data);
 
         drawScatterplot(data);
+        drawScatterplot2(data);
 
         }).catch(function(error) {
         // Error occurred while loading the data
@@ -38,58 +44,168 @@
                     item['Total Alkalinity'] =  isNaN(item['Total Alkalinity']) ? 0 :  +item['Total Alkalinity']
                     item['Total hardness'] =  isNaN(item['Total hardness']) ? 0 :  +item['Total hardness']
                     item['Electrical Conductivity'] =  isNaN(item['Electrical Conductivity']) ? 0 :  +item['Electrical Conductivity']
+                    item['Total Dissolved Solids'] =  isNaN(item['Total Dissolved Solids']) ? 0 :  +item['Total Dissolved Solids']
                     mData.push(item)
                 });
                 return mData
             }
 
+    function drawScatterplot(data) {
 
-      function drawScatterplot (data){
+        data = data.filter((item) => item.pH > 0 && item['Total Alkalinity'] > 0);
 
-      // Set the dimensions of the chart
-      const margin = { top: 20, right: 20, bottom: 30, left: 40 };
-      const width = 1200 - margin.left - margin.right;
-      const height = 700 - margin.top - margin.bottom;
+        // Set the dimensions of the chart
+        const margin = { top: 20, right: 20, bottom: 60, left: 60 };
+        const width = 1200 - margin.left - margin.right;
+        const height = 700 - margin.top - margin.bottom;
 
-      // Create the SVG container
-      const svg = d3
-        .select("#chart")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        // Create the SVG container
+        const svg = d3
+            .select("#chart")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-      // Set the x and y scales
-      const x = d3
-        .scaleLinear()
-        .range([0, width])
-        .domain(d3.extent(data, (d) => d['pH']));
+        // Set the x and y scales
+        const x = d3
+            .scaleLinear()
+            .range([0, width])
+            .domain(d3.extent(data, (d) => d['pH']));
 
-      const y = d3
-        .scaleLinear()
-        .range([height, 0])
-        .domain(d3.extent(data, (d) => d['Total Alkalinity']));
+        const y = d3
+            .scaleLinear()
+            .range([height, 0])
+            .domain(d3.extent(data, (d) => d['Total Alkalinity']));
 
-      // Create the dots
-      svg
-        .selectAll(".dot")
-        .data(data)
-        .enter()
-        .append("circle")
-        .attr("class", "dot")
-        .attr("cx", (d) => x(d['pH']))
-        .attr("cy", (d) => y(d['Total Alkalinity']))
-        .attr("r", 5);
+        // Create the dots
+        const dots = svg
+            .selectAll(".dot")
+            .data(data)
+            .enter()
+            .append("circle")
+            .attr("class", "dot")
+            .attr("cx", (d) => x(d['pH']))
+            .attr("cy", (d) => y(d['Total Alkalinity']))
+            .attr("r", 5)
+            .on("click", handleClick);
 
-      // Add x-axis
-      svg
-        .append("g")
-        .attr("transform", "translate(0," + height + ")")
-        .call(d3.axisBottom(x));
+        // Add x-axis label
+        svg
+            .append("text")
+            .attr("class", "axis-label")
+            .attr("x", width / 2)
+            .attr("y", height + margin.bottom - 10)
+            .style("text-anchor", "middle")
+            .text("pH");
 
-      // Add y-axis
-      svg.append("g").call(d3.axisLeft(y));
-      }
+        // Add y-axis label
+        svg
+            .append("text")
+            .attr("class", "axis-label")
+            .attr("transform", "rotate(-90)")
+            .attr("x", -(height / 2))
+            .attr("y", -margin.left + 20)
+            .style("text-anchor", "middle")
+            .text("Total Alkalinity");
+
+        // Add x-axis
+        svg.append("g").attr("transform", "translate(0," + height + ")").call(d3.axisBottom(x));
+
+        // Add y-axis
+        svg.append("g").call(d3.axisLeft(y));
+
+        // Handle click event
+        function handleClick(d) {
+            // Call your function with the data associated with the clicked datapoint
+            yourFunction(d);
+        }
+    }
+
+    function drawScatterplot2(data) {
+
+        data = data.filter((item) => item.pH > 0 && item['Electrical Conductivity'] > 0);
+
+        // Set the dimensions of the chart
+        const margin = { top: 20, right: 20, bottom: 60, left: 60 };
+        const width = 1200 - margin.left - margin.right;
+        const height = 700 - margin.top - margin.bottom;
+
+        // Create the SVG container
+        const svg = d3
+            .select("#chart2")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        // Set the x and y scales
+        const x = d3
+            .scaleLinear()
+            .range([0, width])
+            .domain(d3.extent(data, (d) => d['pH']));
+
+        const y = d3
+            .scaleLinear()
+            .range([height, 0])
+            .domain(d3.extent(data, (d) => d['Electrical Conductivity']));
+
+        // Create the dots
+        const dots = svg
+            .selectAll(".dot")
+            .data(data)
+            .enter()
+            .append("circle")
+            .attr("class", "dot")
+            .attr("cx", (d) => x(d['pH']))
+            .attr("cy", (d) => y(d['Electrical Conductivity']))
+            .attr("r", 5)
+            .on("click", handleClick);
+
+        // Add x-axis label
+        svg
+            .append("text")
+            .attr("class", "axis-label")
+            .attr("x", width / 2)
+            .attr("y", height + margin.bottom - 10)
+            .style("text-anchor", "middle")
+            .text("pH");
+
+        // Add y-axis label
+        svg
+            .append("text")
+            .attr("class", "axis-label")
+            .attr("transform", "rotate(-90)")
+            .attr("x", -(height / 2))
+            .attr("y", -margin.left + 20)
+            .style("text-anchor", "middle")
+            .text("Electrical Conductivity");
+
+        // Add x-axis
+        svg.append("g").attr("transform", "translate(0," + height + ")").call(d3.axisBottom(x));
+
+        // Add y-axis
+        svg.append("g").call(d3.axisLeft(y));
+
+        // Handle click event
+        function handleClick(d) {
+            // Call your function with the data associated with the clicked datapoint
+            yourFunction(d);
+        }
+        }
+
+
+
+
+
+function yourFunction(data) {
+  // Extract the source name from the data
+  const sourceName = data['Source Name'];
+
+  // Display the source name using window.alert
+  window.alert("Source Name: " + sourceName);
+}
+
     </script>
   </body>
 </html>

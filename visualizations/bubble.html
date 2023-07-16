@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bubble Chart with Axis Labels</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    .bubble {
+      fill: steelblue;
+      opacity: 0.7;
+    }
+    .label {
+      fill: white;
+      font-size: 12px;
+      text-anchor: middle;
+    }
+    .axis-label {
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <svg id="chart" width="800" height="600"></svg>
+
+  <script>
+    // Sample data
+    const data = [
+      { x: 5, y: 10, size: 20, label: "Bubble 1" },
+      { x: 8, y: 6, size: 15, label: "Bubble 2" },
+      { x: 3, y: 12, size: 25, label: "Bubble 3" },
+      // Add more data points...
+    ];
+
+    // Set the dimensions of the chart
+    const margin = { top: 20, right: 20, bottom: 60, left: 60 };
+    const width = 800 - margin.left - margin.right;
+    const height = 600 - margin.top - margin.bottom;
+
+    // Create the SVG container
+    const svg = d3.select("#chart")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    // Set the scales for x, y, and bubble size
+    const xScale = d3.scaleLinear()
+      .domain([0, d3.max(data, (d) => d.x)])
+      .range([0, width]);
+
+    const yScale = d3.scaleLinear()
+      .domain([0, d3.max(data, (d) => d.y)])
+      .range([height, 0]);
+
+    const sizeScale = d3.scaleLinear()
+      .domain([0, d3.max(data, (d) => d.size)])
+      .range([5, 30]);
+
+    // Create the bubbles
+    svg.selectAll(".bubble")
+      .data(data)
+      .enter()
+      .append("circle")
+      .attr("class", "bubble")
+      .attr("cx", (d) => xScale(d.x))
+      .attr("cy", (d) => yScale(d.y))
+      .attr("r", (d) => sizeScale(d.size));
+
+    // Add labels to the bubbles
+    svg.selectAll(".label")
+      .data(data)
+      .enter()
+      .append("text")
+      .attr("class", "label")
+      .attr("x", (d) => xScale(d.x))
+      .attr("y", (d) => yScale(d.y))
+      .text((d) => d.label);
+
+    // Add x-axis label
+    svg.append("text")
+      .attr("class", "axis-label")
+      .attr("x", width / 2)
+      .attr("y", height + margin.bottom - 10)
+      .style("text-anchor", "middle")
+      .text("X Axis Label");
+
+    // Add y-axis label
+    svg.append("text")
+      .attr("class", "axis-label")
+      .attr("transform", "rotate(-90)")
+      .attr("x", -(height / 2))
+      .attr("y", -margin.left + 20)
+      .style("text-anchor", "middle")
+      .text("Y Axis Label");
+
+    // Add x-axis
+    svg.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(xScale));
+
+    // Add y-axis
+    svg.append("g")
+      .call(d3.axisLeft(yScale));
+  </script>
+</body>
+</html>
